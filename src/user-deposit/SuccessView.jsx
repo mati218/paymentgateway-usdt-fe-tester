@@ -1,132 +1,206 @@
-import { CheckCircle, Lightbulb, Wifi, WifiOff, Loader2, ExternalLink } from 'lucide-react'
+import { CheckCircle, Clock, XCircle, Wifi, WifiOff, Loader2, ExternalLink, RefreshCw } from 'lucide-react'
 
-/* ── WebSocket status pill ── */
+// Socket event payload from DepositCompleted:
+// { reference, tx_hash, amount, status, user_account_id, user_name, verified_at, explorer }
+// status values: 'completed' | 'failed' | 'pending'
+
+/* ── WS connection pill ── */
 function WsPill({ status }) {
-  const map = {
-    idle:       { label: 'Waiting…',    cls: 'bg-border text-content-3',          icon: <WifiOff  size={11} /> },
-    connecting: { label: 'Connecting',  cls: 'bg-yellow-500/15 text-yellow-400',  icon: <Loader2  size={11} className="animate-spin" /> },
-    connected:  { label: 'Live',        cls: 'bg-accent/15 text-accent',           icon: <Wifi     size={11} /> },
-    error:      { label: 'WS Error',    cls: 'bg-red-500/15 text-red-400',         icon: <WifiOff  size={11} /> },
+  const cfg = {
+    idle:       { label: 'Waiting',     cls: 'text-content-3 bg-bg-4 border-border',              dot: 'bg-content-3',  icon: <WifiOff size={10} /> },
+    connecting: { label: 'Connecting',  cls: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20', dot: 'bg-yellow-400 animate-pulse', icon: <Loader2 size={10} className="animate-spin" /> },
+    connected:  { label: 'Live',        cls: 'text-accent bg-accent/10 border-accent/20',          dot: 'bg-accent animate-pulse',  icon: <Wifi size={10} /> },
+    error:      { label: 'WS Error',    cls: 'text-red-400 bg-red-500/10 border-red-500/20',       dot: 'bg-red-400',    icon: <WifiOff size={10} /> },
   }
-  const { label, cls, icon } = map[status] ?? map.idle
+  const { label, cls, dot, icon } = cfg[status] ?? cfg.idle
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${cls}`}>
-      {icon} {label}
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${cls}`}>
+      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dot}`} />
+      {icon}
+      {label}
+    </span>
+  )
+}
+
+/* ── Single summary row ── */
+function Row({ label, value, mono, accent, children }) {
+  return (
+    <div className="flex items-start gap-3 px-4 py-3 border-b border-border last:border-0">
+      <div className="text-[10px] text-content-3 font-semibold uppercase tracking-widest w-[88px] flex-shrink-0 pt-0.5">
+        {label}
+      </div>
+      {children ?? (
+        <div className={`text-sm break-all leading-snug flex-1 ${mono ? 'font-mono text-content-2' : 'font-medium'} ${accent ? 'text-accent' : 'text-content'}`}>
+          {value}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── Status badge ── */
+function StatusBadge({ event }) {
+  // Socket sends status = 'completed' when verified
+  if (!event) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+        <Clock size={11} /> Pending Verification
+      </span>
+    )
+  }
+  if (event.status === 'completed') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-accent/10 text-accent border border-accent/20">
+        <CheckCircle size={11} /> Confirmed
+      </span>
+    )
+  }
+  if (event.status === 'failed') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
+        <XCircle size={11} /> Failed
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+      <Clock size={11} /> {event.status}
     </span>
   )
 }
 
 export default function SuccessView({ amount, referenceId, txHash, wsStatus, depositEvent, onReset }) {
-  const isVerified = depositEvent?.status === 'confirmed'
-  const isFailed   = depositEvent?.status === 'failed'
+  // Socket sends 'completed' when deposit is verified
+  const isCompleted = depositEvent?.status === 'completed'
+  const isFailed    = depositEvent?.status === 'failed'
+  const isPending   = !depositEvent
 
-  const rows = [
-    { label: 'Amount',       value: `${parseFloat(amount).toFixed(2)} USDT`, mono: false },
-    { label: 'Network',      value: 'TRC20 (TRON)',                          mono: false },
-    { label: 'Reference ID', value: referenceId,                             mono: true  },
-    { label: 'TX Hash',      value: txHash,                                  mono: true  },
-  ]
+  // Use on-chain amount from socket if available (authoritative), else submitted amount
+  const displayAmount = depositEvent?.amount
+    ? `${parseFloat(depositEvent.amount).toFixed(2)} USDT`
+    : `${parseFloat(amount).toFixed(2)} USDT`
+
+  const explorerUrl = depositEvent?.explorer
+    ?? (txHash ? `https://tronscan.org/#/transaction/${txHash}` : null)
 
   return (
-    <div className="bg-bg-2 border border-border rounded-xl p-6 shadow-[0_4px_24px_rgba(0,0,0,0.5)] max-w-md mx-auto text-center">
+    <div className="max-w-md mx-auto w-full">
 
-      {/* Icon — changes when verified */}
-      <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5 border-2 transition-colors duration-500 ${
-        isVerified
-          ? 'bg-accent/20 border-accent'
-          : isFailed
-            ? 'bg-red-500/10 border-red-500/40'
-            : 'bg-accent/10 border-accent/30'
-      }`}>
-        <CheckCircle size={40} className={isVerified ? 'text-accent' : isFailed ? 'text-red-400' : 'text-accent'} />
+      {/* ── Hero icon + heading ── */}
+      <div className="text-center mb-6">
+        <div className={`w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center border-2 transition-all duration-700 ${
+          isCompleted ? 'bg-accent/15 border-accent shadow-[0_0_32px_rgba(34,197,94,0.2)]'
+          : isFailed  ? 'bg-red-500/10 border-red-500/30'
+          :              'bg-bg-3 border-border'
+        }`}>
+          {isCompleted
+            ? <CheckCircle size={40} className="text-accent" />
+            : isFailed
+              ? <XCircle size={40} className="text-red-400" />
+              : <RefreshCw size={36} className="text-content-3 animate-spin" style={{ animationDuration: '3s' }} />
+          }
+        </div>
+
+        <h2 className={`mb-1 transition-colors duration-500 ${
+          isCompleted ? 'text-accent' : isFailed ? 'text-red-400' : 'text-content'
+        }`}>
+          {isCompleted ? 'Deposit Confirmed!' : isFailed ? 'Deposit Failed' : 'Verifying Payment…'}
+        </h2>
+
+        <p className="text-sm text-content-3">
+          {isCompleted
+            ? 'Your USDT has been verified and your balance has been credited.'
+            : isFailed
+              ? 'Verification failed. Contact support with your reference ID.'
+              : 'Waiting for blockchain confirmation. This updates automatically.'}
+        </p>
       </div>
 
-      <h2 className={isVerified ? 'text-accent' : isFailed ? 'text-red-400' : 'text-accent'}>
-        {isVerified ? 'Deposit Confirmed!' : isFailed ? 'Deposit Failed' : 'Deposit Submitted!'}
-      </h2>
-      <p className="mb-4">
-        {isVerified
-          ? 'Your payment has been verified and your balance has been credited.'
-          : isFailed
-            ? 'Verification failed. Please contact support with your reference ID.'
-            : 'Your deposit is being verified. Funds will be credited within a few minutes.'}
-      </p>
+      {/* ── Main card ── */}
+      <div className="bg-bg-2 border border-border rounded-xl shadow-[0_4px_24px_rgba(0,0,0,0.4)] overflow-hidden mb-4">
 
-      {/* Live status indicator */}
-      <div className="flex items-center justify-center gap-2 mb-5">
-        <span className="text-xs text-content-3">Real-time verification:</span>
-        <WsPill status={wsStatus} />
-      </div>
+        {/* Card header — WS status */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-bg-3/50">
+          <span className="text-[11px] font-semibold text-content-3 uppercase tracking-widest">
+            Transaction Summary
+          </span>
+          <WsPill status={wsStatus} />
+        </div>
 
-      {/* Live event data — shown once the event fires */}
-      {depositEvent && (
-        <div className="bg-bg-3 border border-border rounded-xl overflow-hidden mb-5 text-left">
-          <div className="px-4 py-2 border-b border-border flex items-center gap-2">
-            <Wifi size={13} className="text-accent" />
-            <span className="text-[11px] font-semibold text-accent uppercase tracking-widest">Live Update</span>
+        {/* Rows */}
+        <Row label="Status">
+          <StatusBadge event={depositEvent} />
+        </Row>
+
+        <Row label="Amount" value={displayAmount} />
+
+        <Row label="Network" value="TRC20 (TRON)" />
+
+        <Row
+          label="Reference"
+          value={depositEvent?.reference ?? referenceId}
+          mono
+        />
+
+        <Row
+          label="TX Hash"
+          value={depositEvent?.tx_hash ?? txHash}
+          mono
+        />
+
+        {/* Verified at — only shown after confirmation */}
+        {isCompleted && depositEvent?.verified_at && (
+          <Row
+            label="Verified"
+            value={new Date(depositEvent.verified_at).toLocaleString()}
+          />
+        )}
+
+        {/* Explorer link */}
+        {explorerUrl && (
+          <div className="px-4 py-3">
+            <a
+              href={explorerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline font-medium"
+            >
+              <ExternalLink size={12} />
+              View on TronScan
+            </a>
           </div>
-          {[
-            ['Status',    depositEvent.status],
-            ['Amount',    depositEvent.amount ? `${depositEvent.amount} USDT` : null],
-            ['Reference', depositEvent.reference],
-          ].filter(([, v]) => v).map(([label, value]) => (
-            <div key={label} className="flex gap-4 items-center px-4 py-2.5 border-b border-border last:border-0">
-              <div className="text-[10px] text-content-3 font-semibold uppercase tracking-widest min-w-[80px] flex-shrink-0">
-                {label}
-              </div>
-              <div className="text-sm text-content font-medium break-all">{value}</div>
-            </div>
-          ))}
-          {depositEvent.explorer && (
-            <div className="px-4 py-2.5">
-              <a
-                href={depositEvent.explorer}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline"
-              >
-                <ExternalLink size={12} /> View on TronScan
-              </a>
-            </div>
-          )}
+        )}
+      </div>
+
+      {/* ── Info banner — only while pending ── */}
+      {isPending && (
+        <div className="alert alert-info mb-4">
+          <Wifi size={14} className="flex-shrink-0 text-accent mt-0.5" />
+          <p className="text-xs leading-relaxed">
+            Connected via WebSocket — this page will update <strong>instantly</strong> when
+            your transaction is confirmed on the blockchain.
+          </p>
         </div>
       )}
 
-      {/* Summary table */}
-      <div className="bg-bg-3 border border-border rounded-xl overflow-hidden mb-5 text-left">
-        {rows.map(({ label, value, mono }, i) => (
-          <div
-            key={label}
-            className={`flex gap-4 items-center px-4 py-3 ${i < rows.length - 1 ? 'border-b border-border' : ''}`}
-          >
-            <div className="text-[10px] text-content-3 font-semibold uppercase tracking-widest min-w-[90px] flex-shrink-0">
-              {label}
-            </div>
-            <div className={`text-sm text-content break-all leading-snug flex-1 ${mono ? 'font-mono' : 'font-medium'}`}>
-              {value}
-            </div>
-          </div>
-        ))}
-        {/* Status row — updates live */}
-        <div className="flex gap-4 items-center px-4 py-3">
-          <div className="text-[10px] text-content-3 font-semibold uppercase tracking-widest min-w-[90px] flex-shrink-0">
-            Status
-          </div>
-          {isVerified
-            ? <span className="badge badge-confirmed">Confirmed</span>
-            : isFailed
-              ? <span className="badge badge-failed">Failed</span>
-              : <span className="badge badge-pending">Pending Verification</span>
-          }
-        </div>
-      </div>
-
-      {!depositEvent && (
-        <div className="alert alert-success mb-5 text-left">
-          <Lightbulb size={16} className="flex-shrink-0 mt-0.5" />
+      {/* ── Success banner — shown after confirmation ── */}
+      {isCompleted && (
+        <div className="alert alert-success mb-4">
+          <CheckCircle size={14} className="flex-shrink-0 mt-0.5" />
           <p className="text-xs leading-relaxed">
-            Verification typically takes <strong>2–5 minutes</strong>.
-            This page will update automatically when your payment is confirmed.
+            <strong>{displayAmount}</strong> has been credited to your account.
+            Your balance is now updated.
+          </p>
+        </div>
+      )}
+
+      {/* ── Failed banner ── */}
+      {isFailed && (
+        <div className="alert alert-danger mb-4">
+          <XCircle size={14} className="flex-shrink-0 mt-0.5" />
+          <p className="text-xs leading-relaxed">
+            Deposit verification failed. Please contact support with reference{' '}
+            <code className="font-mono text-[11px]">{referenceId}</code>.
           </p>
         </div>
       )}

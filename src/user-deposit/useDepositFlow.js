@@ -10,6 +10,11 @@ export function useDepositFlow() {
   const [txHash, setTxHash]               = useState('')
   const [submitResult, setSubmitResult]   = useState(null)
   const [loading, setLoading]             = useState(false)
+  // Internal org user ID returned by the submit response — used for WS channel
+  const [internalUserId, setInternalUserId] = useState(null)
+  // Pre-populated from the HTTP submit response when deposit is already completed.
+  // Shown immediately so the user doesn't wait for a socket event that already fired.
+  const [initialDepositEvent, setInitialDepositEvent] = useState(null)
 
   const goToStep = useCallback((n) => setStep(n), [])
 
@@ -23,6 +28,8 @@ export function useDepositFlow() {
     setTxHash('')
     setSubmitResult(null)
     setLoading(false)
+    setInternalUserId(null)
+    setInitialDepositEvent(null)
   }, [])
 
   return {
@@ -35,6 +42,8 @@ export function useDepositFlow() {
     txHash, setTxHash,
     submitResult, setSubmitResult,
     loading, setLoading,
+    internalUserId, setInternalUserId,
+    initialDepositEvent, setInitialDepositEvent,
     reset,
   }
 }

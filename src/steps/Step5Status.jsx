@@ -37,20 +37,21 @@ export default function Step5Status({ store }) {
     statusResult, setStatusResult,
     loadingStatus, setLoadingStatus,
     submitResult,
-    submitUserId,
     goToStep,
   } = store
 
   // Start WebSocket listener once a deposit has been successfully submitted.
-  // submitUserId is the user_account_id entered in Step 4.
-  const echoUserId = submitResult?.ok ? submitUserId : null
-  const echoRef    = submitResult?.ok ? statusRef    : null
-  const { depositEvent, wsStatus } = useDepositEcho(echoUserId, echoRef)
+  // Use the internal user_id from the submit response (deposit.{user_id} channel).
+  const internalUserId = submitResult?.ok
+    ? (submitResult.data?.data?.user_id ?? submitResult.data?.user_id ?? null)
+    : null
+  const echoRef    = submitResult?.ok ? statusRef : null
+  const { depositEvent, wsStatus } = useDepositEcho(internalUserId, secretKey, echoRef)
 
   // Toast when live event arrives
   React.useEffect(() => {
     if (!depositEvent) return
-    if (depositEvent.status === 'confirmed') {
+    if (depositEvent.status === 'completed') {
       toast.success(`Live: Deposit confirmed! Ref: ${depositEvent.reference}`)
     } else if (depositEvent.status === 'failed') {
       toast.error(`Live: Deposit failed. Ref: ${depositEvent.reference}`)
@@ -214,7 +215,7 @@ X-SECRET-KEY: ${secretKey ? secretKey.slice(0, 10) + '••••' : '<not set>
 
         {submitResult?.ok && !depositEvent && (
           <p className="text-xs text-muted">
-            Listening on <code style={{ fontFamily: 'monospace' }}>deposit.{submitUserId}</code> for{' '}
+            Listening on <code style={{ fontFamily: 'monospace' }}>deposit.{internalUserId ?? '…'}</code> for{' '}
             <code style={{ fontFamily: 'monospace' }}>.deposit.completed</code> event…
           </p>
         )}

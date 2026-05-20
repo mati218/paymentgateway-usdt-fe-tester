@@ -4,6 +4,7 @@ import {
   Check, Copy, Clock, Zap, Timer,
   QrCode, Wallet, Tag, ClipboardList,
   AlertTriangle, ArrowRight,
+  ArrowLeft,
 } from 'lucide-react'
 
 function getQrSrc(raw) {
@@ -56,7 +57,7 @@ function InfoRow({ icon, label, value, mono, copyable }) {
   )
 }
 
-export default function Step2Payment({ walletAddress, qrImage, referenceId, amount, paymentExpiry, onContinue }) {
+export default function Step2Payment({ walletAddress, qrImage, referenceId, amount, paymentExpiry, onContinue,onBack }) {
   const [remaining, setRemaining] = useState(paymentExpiry ? paymentExpiry - Date.now() : 0)
 
   useEffect(() => {
@@ -70,8 +71,8 @@ export default function Step2Payment({ walletAddress, qrImage, referenceId, amou
   }, [paymentExpiry])
 
   const expired = remaining <= 0
-  const urgent  = remaining > 0 && remaining < 5 * 60 * 1000
-  const qrSrc   = getQrSrc(qrImage)
+  const urgent = remaining > 0 && remaining < 5 * 60 * 1000
+  const qrSrc = getQrSrc(qrImage)
 
   const TimerIcon = expired ? Clock : urgent ? Zap : Timer
 
@@ -80,11 +81,10 @@ export default function Step2Payment({ walletAddress, qrImage, referenceId, amou
 
       {/* Timer */}
       {paymentExpiry && (
-        <div className={`flex items-center justify-between rounded-xl px-4 py-2.5 border text-sm ${
-          expired ? 'bg-red-500/8 border-red-500/20'
-          : urgent ? 'bg-yellow-400/8 border-yellow-400/20'
-          : 'bg-accent/8 border-accent/20'
-        }`}>
+        <div className={`flex items-center justify-between rounded-xl px-4 py-2.5 border text-sm ${expired ? 'bg-red-500/8 border-red-500/20'
+            : urgent ? 'bg-yellow-400/8 border-yellow-400/20'
+              : 'bg-accent/8 border-accent/20'
+          }`}>
           <span className={`font-semibold flex items-center gap-2 ${expired ? 'text-red-400' : urgent ? 'text-yellow-400' : 'text-accent'}`}>
             <TimerIcon size={15} />
             {expired ? 'Payment window expired' : 'Complete payment within'}
@@ -137,7 +137,7 @@ export default function Step2Payment({ walletAddress, qrImage, referenceId, amou
         {/* Wallet + reference */}
         <div className="flex flex-col gap-2">
           <InfoRow icon={<Wallet size={16} />} label="Wallet Address (TRC20)" value={walletAddress} mono copyable />
-          <InfoRow icon={<Tag size={16} />}    label="Reference ID"           value={referenceId}   mono copyable />
+          <InfoRow icon={<Tag size={16} />} label="Reference ID" value={referenceId} mono copyable />
         </div>
       </div>
 
@@ -177,6 +177,13 @@ export default function Step2Payment({ walletAddress, qrImage, referenceId, amou
       </div>
 
       {/* CTA */}
+      <button
+        className="btn btn-outline flex-shrink-0"
+        onClick={onBack}
+        // disabled={loading}
+      >
+        <ArrowLeft size={15} /> Back
+      </button>
       <button
         className="btn btn-success w-full h-12 text-base"
         onClick={onContinue}

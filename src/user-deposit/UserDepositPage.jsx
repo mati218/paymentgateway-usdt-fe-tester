@@ -95,20 +95,24 @@ export default function UserDepositPage({ secretKey }) {
   const [serverError, setServerError] = React.useState('')
 
   // Start WebSocket listener once deposit is submitted (step === 'success')
-  // userId comes from MOCK_USER; reference filters to this specific deposit
-  const echoUserId   = flow.step === 'success' ? MOCK_USER.id   : null
-  const echoRef      = flow.step === 'success' ? flow.referenceId : null
-  const { depositEvent, wsStatus } = useDepositEcho(echoUserId, echoRef)
+  // internalUserId = org's DB user ID from submit response (used for WS channel)
+  const echoUserId = flow.step === 'success' ? flow.internalUserId : null
+  const echoRef    = flow.step === 'success' ? flow.referenceId    : null
+  const { depositEvent: socketEvent, wsStatus } = useDepositEcho(echoUserId, secretKey, echoRef)
 
-  // Toast when live event arrives
+  // Use socket event if it arrives, otherwise fall back to the pre-populated
+  // event from the HTTP response (deposit was already completed server-side)
+  const depositEvent = socketEvent ?? flow.initialDepositEvent
+
+  // Toast when live socket event arrives (not for the pre-populated one)
   React.useEffect(() => {
-    if (!depositEvent) return
-    if (depositEvent.status === 'confirmed') {
+    if (!socketEvent) return
+    if (socketEvent.status === 'completed') {
       toast.success('Payment confirmed! Your balance has been credited.')
-    } else if (depositEvent.status === 'failed') {
+    } else if (socketEvent.status === 'failed') {
       toast.error('Payment verification failed. Please contact support.')
     }
-  }, [depositEvent])
+  }, [socketEvent])
 
   async function handleStep1Next(amount) {
     flow.setLoading(true)
@@ -158,9 +162,32 @@ export default function UserDepositPage({ secretKey }) {
         return
       }
 
+      const data = result.data?.data ?? result.data
+
       flow.setTxHash(txHash)
+      // Capture the internal org user_id for WebSocket channel subscription
+      flow.setInternalUserId(data?.user_id ?? null)
+
+      // If the server already completed the deposit (status = 'completed'),
+      // pre-populate the deposit event so the UI shows confirmed immediately.
+      // The WebSocket subscription is still started as a live fallback.
+      if (data?.status === 'completed') {
+        flow.setInitialDepositEvent({
+          reference:       data.reference,
+          tx_hash:         data.tx_hash,
+          amount:          data.amount,
+          status:          'completed',
+          user_account_id: data.user_account_id,
+          user_name:       data.user_name,
+          explorer:        data.explorer,
+          verified_at:     null,
+        })
+        toast.success('Deposit confirmed!')
+      } else {
+        toast.success('Deposit submitted! Waiting for confirmation…')
+      }
+
       flow.goToStep('success')
-      toast.success('Deposit submitted successfully!')
     } catch {
       toast.error('Submission failed. Please try again.')
     } finally {
@@ -196,6 +223,7 @@ export default function UserDepositPage({ secretKey }) {
           referenceId={flow.referenceId}
           amount={flow.amount}
           paymentExpiry={flow.paymentExpiry}
+          onBack={() => { setServerError(''); flow.goToStep(1) }}
           onContinue={() => { setServerError(''); flow.goToStep(3) }}
         />
       )}
