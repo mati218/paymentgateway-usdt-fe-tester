@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { CreditCard, AlertTriangle, Globe, ArrowRight } from 'lucide-react'
 
 const PRESETS = [50, 100, 200, 500]
-const MIN_AMOUNT = 10
+const MIN_AMOUNT = 1
 
 export default function Step1Amount({ user, loading, onNext }) {
   const [amount, setAmount] = useState('')

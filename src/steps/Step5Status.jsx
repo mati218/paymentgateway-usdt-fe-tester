@@ -1,8 +1,28 @@
 import React from 'react'
 import toast from 'react-hot-toast'
-import { Search, RefreshCw, ArrowLeft, Plus } from 'lucide-react'
+import { Search, RefreshCw, ArrowLeft, Plus, Wifi, WifiOff, Loader2, ExternalLink } from 'lucide-react'
 import { checkDepositStatus } from '../api/deposit'
 import ResponsePanel from '../components/ResponsePanel'
+import { useDepositEcho } from '../lib/useDepositEcho'
+
+/* ── WebSocket status pill (same as user view) ── */
+function WsPill({ status }) {
+  const map = {
+    idle:       { label: 'Waiting…',   cls: 'bg-[var(--border)] text-[var(--muted)]',    icon: <WifiOff  size={11} /> },
+    connecting: { label: 'Connecting', cls: 'bg-yellow-500/15 text-yellow-400',           icon: <Loader2  size={11} style={{ animation: 'spin 1s linear infinite' }} /> },
+    connected:  { label: 'Live',       cls: 'bg-[rgba(34,197,94,.15)] text-[#4ade80]',    icon: <Wifi     size={11} /> },
+    error:      { label: 'WS Error',   cls: 'bg-red-500/15 text-red-400',                 icon: <WifiOff  size={11} /> },
+  }
+  const { label, cls, icon } = map[status] ?? map.idle
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      padding: '2px 8px', borderRadius: 999, fontSize: 10, fontWeight: 600,
+    }} className={cls}>
+      {icon} {label}
+    </span>
+  )
+}
 
 const STATUS_BADGE = {
   pending:   'badge badge-pending',
@@ -16,8 +36,28 @@ export default function Step5Status({ store }) {
     statusRef, setStatusRef,
     statusResult, setStatusResult,
     loadingStatus, setLoadingStatus,
+    submitResult,
+    submitUserId,
     goToStep,
   } = store
+
+  // Start WebSocket listener once a deposit has been successfully submitted.
+  // submitUserId is the user_account_id entered in Step 4.
+  const echoUserId = submitResult?.ok ? submitUserId : null
+  const echoRef    = submitResult?.ok ? statusRef    : null
+  const { depositEvent, wsStatus } = useDepositEcho(echoUserId, echoRef)
+
+  // Toast when live event arrives
+  React.useEffect(() => {
+    if (!depositEvent) return
+    if (depositEvent.status === 'confirmed') {
+      toast.success(`Live: Deposit confirmed! Ref: ${depositEvent.reference}`)
+    } else if (depositEvent.status === 'failed') {
+      toast.error(`Live: Deposit failed. Ref: ${depositEvent.reference}`)
+    } else {
+      toast(`Live update: status = ${depositEvent.status}`)
+    }
+  }, [depositEvent])
 
   async function handleCheck(e) {
     e.preventDefault()
@@ -148,6 +188,70 @@ X-SECRET-KEY: ${secretKey ? secretKey.slice(0, 10) + '••••' : '<not set>
           </div>
         </>
       )}
+
+      {/* ── Real-time WebSocket panel ── */}
+      <div className="divider" />
+      <div style={{
+        background: 'var(--surface2)',
+        border: '1px solid var(--border)',
+        borderRadius: 10,
+        padding: '1rem',
+        marginBottom: '1rem',
+      }}>
+        <div className="flex items-center justify-between" style={{ marginBottom: '.75rem' }}>
+          <div className="flex items-center gap-2">
+            <Wifi size={15} style={{ color: '#4ade80' }} />
+            <h3 style={{ margin: 0 }}>Real-time Verification</h3>
+          </div>
+          <WsPill status={wsStatus} />
+        </div>
+
+        {!submitResult?.ok && (
+          <p className="text-xs text-muted">
+            Complete Step 4 (Submit Deposit) to activate the WebSocket listener.
+          </p>
+        )}
+
+        {submitResult?.ok && !depositEvent && (
+          <p className="text-xs text-muted">
+            Listening on <code style={{ fontFamily: 'monospace' }}>deposit.{submitUserId}</code> for{' '}
+            <code style={{ fontFamily: 'monospace' }}>.deposit.completed</code> event…
+          </p>
+        )}
+
+        {depositEvent && (
+          <div>
+            <p className="text-xs text-muted" style={{ marginBottom: '.5rem' }}>
+              Event received from Reverb:
+            </p>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.82rem' }}>
+              <tbody>
+                {[
+                  ['status',    depositEvent.status],
+                  ['reference', depositEvent.reference],
+                  ['amount',    depositEvent.amount ? `${depositEvent.amount} USDT` : null],
+                  ['tx_hash',   depositEvent.tx_hash],
+                ].filter(([, v]) => v).map(([k, v]) => (
+                  <tr key={k} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '.35rem .5rem', color: 'var(--muted)', width: '30%', fontWeight: 600, fontFamily: 'monospace', fontSize: '.78rem' }}>{k}</td>
+                    <td style={{ padding: '.35rem .5rem', fontFamily: 'monospace', fontSize: '.78rem', wordBreak: 'break-all' }}>{v}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {depositEvent.explorer && (
+              <a
+                href={depositEvent.explorer}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: '.5rem', fontSize: '.8rem', color: '#4ade80' }}
+              >
+                <ExternalLink size={12} /> View on TronScan
+              </a>
+            )}
+          </div>
+        )}
+      </div>
 
       <ResponsePanel result={statusResult} title="GET /api/deposit/status/:ref" />
 

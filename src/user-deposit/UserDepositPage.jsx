@@ -2,6 +2,7 @@ import React from 'react'
 import toast from 'react-hot-toast'
 import { Check, KeyRound } from 'lucide-react'
 import { useDepositFlow } from './useDepositFlow'
+import { useDepositEcho } from '../lib/useDepositEcho'
 import { generateDepositQR, generateReference, submitUserDeposit } from '../api/userDeposit'
 import Step1Amount  from './Step1Amount'
 import Step2Payment from './Step2Payment'
@@ -92,6 +93,22 @@ function NoKeyPrompt() {
 export default function UserDepositPage({ secretKey }) {
   const flow = useDepositFlow()
   const [serverError, setServerError] = React.useState('')
+
+  // Start WebSocket listener once deposit is submitted (step === 'success')
+  // userId comes from MOCK_USER; reference filters to this specific deposit
+  const echoUserId   = flow.step === 'success' ? MOCK_USER.id   : null
+  const echoRef      = flow.step === 'success' ? flow.referenceId : null
+  const { depositEvent, wsStatus } = useDepositEcho(echoUserId, echoRef)
+
+  // Toast when live event arrives
+  React.useEffect(() => {
+    if (!depositEvent) return
+    if (depositEvent.status === 'confirmed') {
+      toast.success('Payment confirmed! Your balance has been credited.')
+    } else if (depositEvent.status === 'failed') {
+      toast.error('Payment verification failed. Please contact support.')
+    }
+  }, [depositEvent])
 
   async function handleStep1Next(amount) {
     flow.setLoading(true)
@@ -200,6 +217,8 @@ export default function UserDepositPage({ secretKey }) {
           amount={flow.amount}
           referenceId={flow.referenceId}
           txHash={flow.txHash}
+          wsStatus={wsStatus}
+          depositEvent={depositEvent}
           onReset={flow.reset}
         />
       )}

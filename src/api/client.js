@@ -6,7 +6,7 @@ import axios from 'axios'
  */
 export function buildClient(baseURL, secretKey) {
   return axios.create({
-    baseURL: 'https://ojtig2jfon.sharedwithexpose.com',
+    baseURL: 'https://gfbveh8c8f.sharedwithexpose.com',
     headers: {
       'Content-Type': 'application/json',
       ...(secretKey ? { 'X-SECRET-KEY': secretKey } : {}),
