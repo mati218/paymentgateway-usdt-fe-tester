@@ -29,7 +29,7 @@ export async function getWalletInfo(baseURL, secretKey) {
 
 /**
  * Step 3 — POST /api/deposit/get-reference
- * Body: { network, name }
+ * Body: { network, user_name,user_account_id }
  */
 export async function getReference(baseURL, secretKey, payload) {
   const client = buildClient(baseURL, secretKey)
@@ -42,8 +42,8 @@ export async function getReference(baseURL, secretKey, payload) {
 }
 
 /**
- * Step 4 — POST /api/deposit/submit
- * Body: { reference, tx_hash, from_address }
+ * Step 3 — POST /api/deposit/submit
+ * Body: { reference, tx_hash, user_account_id, amount, user_name }
  */
 export async function submitDeposit(baseURL, secretKey, payload) {
   const client = buildClient(baseURL, secretKey)

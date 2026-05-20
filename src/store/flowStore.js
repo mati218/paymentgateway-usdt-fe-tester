@@ -20,13 +20,16 @@ export function useFlowStore() {
   const [statusResult,    setStatusResult]    = useState(null)
 
   // ── Reference form fields ────────────────────────────────────
-  const [refNetwork, setRefNetwork] = useState('TRC20')
-  const [refName,    setRefName]    = useState('')
+  const [refNetwork,       setRefNetwork]       = useState('TRC20')
+  const [refName,          setRefName]          = useState('')
+  const [refUserAccountId, setRefUserAccountId] = useState('')
 
   // ── Submit form fields ───────────────────────────────────────
   const [submitReference,   setSubmitReference]   = useState('')
   const [submitTxHash,      setSubmitTxHash]      = useState('')
   const [submitFromAddress, setSubmitFromAddress] = useState('')
+  const [submitUserId,      setSubmitUserId]      = useState('')
+  const [submitAmount,      setSubmitAmount]      = useState('')
 
   // ── Status check ─────────────────────────────────────────────
   const [statusRef, setStatusRef] = useState('')
@@ -58,6 +61,7 @@ export function useFlowStore() {
     referenceResult, setReferenceResult,
     refNetwork, setRefNetwork,
     refName, setRefName,
+    refUserAccountId, setRefUserAccountId,
     loadingReference, setLoadingReference,
     applyReferenceToSubmit,
     // submit
@@ -65,6 +69,8 @@ export function useFlowStore() {
     submitReference, setSubmitReference,
     submitTxHash, setSubmitTxHash,
     submitFromAddress, setSubmitFromAddress,
+    submitUserId, setSubmitUserId,
+    submitAmount, setSubmitAmount,
     loadingSubmit, setLoadingSubmit,
     // status
     statusResult, setStatusResult,

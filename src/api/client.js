@@ -6,7 +6,7 @@ import axios from 'axios'
  */
 export function buildClient(baseURL, secretKey) {
   return axios.create({
-    baseURL: 'https://api.aipay247.com',
+    baseURL: 'https://ojtig2jfon.sharedwithexpose.com',
     headers: {
       'Content-Type': 'application/json',
       ...(secretKey ? { 'X-SECRET-KEY': secretKey } : {}),

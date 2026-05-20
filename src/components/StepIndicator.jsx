@@ -1,11 +1,10 @@
 import React from 'react'
 
 const STEPS = [
-  { n: 1, label: 'Secret Key' },
-  { n: 2, label: 'QR Code' },
-  { n: 3, label: 'Reference' },
-  { n: 4, label: 'Submit' },
-  { n: 5, label: 'Status' },
+  { n: 1, label: 'QR Code' },
+  { n: 2, label: 'Reference' },
+  { n: 3, label: 'Submit' },
+  { n: 4, label: 'Status' },
 ]
 
 export default function StepIndicator({ current }) {

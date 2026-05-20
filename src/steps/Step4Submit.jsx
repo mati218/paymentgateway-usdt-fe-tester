@@ -3,10 +3,6 @@ import toast from 'react-hot-toast'
 import { submitDeposit } from '../api/deposit'
 import ResponsePanel from '../components/ResponsePanel'
 
-/**
- * Extract field-level validation errors from the API response.
- * Handles: { errors: { field: ["msg"] } }  or  { errors: { field: "msg" } }
- */
 function extractFieldErrors(result) {
   if (!result || result.ok) return {}
   const raw = result.data?.errors
@@ -18,39 +14,56 @@ function extractFieldErrors(result) {
   return out
 }
 
+function FieldError({ msg }) {
+  return (
+    <p style={{
+      marginTop: '.3rem', fontSize: '.78rem', color: 'var(--danger)',
+      display: 'flex', alignItems: 'center', gap: '.3rem',
+    }}>
+      <span>⚠</span> {msg}
+    </p>
+  )
+}
+
 export default function Step4Submit({ store }) {
   const {
     baseURL, secretKey,
-    submitReference, setSubmitReference,
-    submitTxHash, setSubmitTxHash,
+    submitReference,   setSubmitReference,
+    submitTxHash,      setSubmitTxHash,
     submitFromAddress, setSubmitFromAddress,
-    submitResult, setSubmitResult,
-    loadingSubmit, setLoadingSubmit,
+    submitUserId,      setSubmitUserId,
+    submitAmount,      setSubmitAmount,
+    submitResult,      setSubmitResult,
+    loadingSubmit,     setLoadingSubmit,
     setStatusRef,
     goToStep,
   } = store
 
-  // Local client-side validation errors (cleared on each submit)
   const [localErrors, setLocalErrors] = useState({})
 
-  // Derive server-side field errors from the last result
-  const serverErrors = extractFieldErrors(submitResult)
-
-  // Merge: local errors take priority while typing; server errors shown after submit
-  const fieldError = (name) => localErrors[name] || serverErrors[name] || null
-
-  function clearLocalError(name) {
+  const serverErrors  = extractFieldErrors(submitResult)
+  const fieldError    = (name) => localErrors[name] || serverErrors[name] || null
+  const clearLocal    = (name) => {
     if (localErrors[name]) setLocalErrors(prev => { const n = { ...prev }; delete n[name]; return n })
+  }
+
+  function fieldStyle(name) {
+    if (fieldError(name))  return { borderColor: 'var(--danger)', boxShadow: '0 0 0 3px rgba(239,68,68,.15)' }
+    if (submitResult?.ok)  return { borderColor: 'var(--success)' }
+    return {}
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
 
-    // Client-side required checks
     const errs = {}
-    if (!submitReference.trim())   errs.reference    = 'Reference is required'
-    if (!submitTxHash.trim())      errs.tx_hash      = 'Transaction hash is required'
-    if (!submitFromAddress.trim()) errs.user_name    = 'Username is required'
+    if (!submitReference.trim())   errs.reference = 'Reference is required'
+    if (!submitTxHash.trim())      errs.tx_hash   = 'Transaction hash is required'
+    if (!submitUserId.toString().trim() || isNaN(Number(submitUserId)) || Number(submitUserId) <= 0)
+                                   errs.user_account_id   = 'User ID must be a positive number'
+    if (!submitAmount.toString().trim() || isNaN(Number(submitAmount)) || Number(submitAmount) <= 0)
+                                   errs.amount    = 'Amount must be a positive number'
+    if (!submitFromAddress.trim()) errs.user_name = 'Username is required'
 
     if (Object.keys(errs).length) {
       setLocalErrors(errs)
@@ -63,6 +76,8 @@ export default function Step4Submit({ store }) {
     const result = await submitDeposit(baseURL, secretKey, {
       reference: submitReference,
       tx_hash:   submitTxHash,
+      user_account_id:   String(submitUserId),
+      amount:    Number(submitAmount),
       user_name: submitFromAddress,
     })
     setSubmitResult(result)
@@ -72,26 +87,13 @@ export default function Step4Submit({ store }) {
       setStatusRef(submitReference)
       toast.success('Deposit submitted successfully!')
     } else {
-      // Show a toast for the top-level message
       const msg = result.data?.message || 'Submission failed'
-      toast.error(`${msg}`)
-
-      // If there are field errors, also toast a hint
-      const errsFromServer = extractFieldErrors(result)
-      if (Object.keys(errsFromServer).length) {
-        const first = Object.values(errsFromServer)[0]
-        toast.error(first, { id: 'field-err' })
+      toast.error(msg)
+      const serverErrs = extractFieldErrors(result)
+      if (Object.keys(serverErrs).length) {
+        toast.error(Object.values(serverErrs)[0], { id: 'field-err' })
       }
     }
-  }
-
-  // Determine border style for a field
-  function fieldStyle(name) {
-    const err = fieldError(name)
-    if (err) return { borderColor: 'var(--danger)', boxShadow: '0 0 0 3px rgba(239,68,68,.15)' }
-    // Green border if field has value and no error and result was ok
-    if (submitResult?.ok) return { borderColor: 'var(--success)' }
-    return {}
   }
 
   const hasServerErrors = !submitResult?.ok && Object.keys(serverErrors).length > 0
@@ -110,20 +112,20 @@ export default function Step4Submit({ store }) {
           fontSize: '1.2rem', flexShrink: 0,
         }}>📤</div>
         <div>
-          <h2>Step 4 — Submit Deposit</h2>
-          <p>After sending USDT on-chain, submit the transaction hash here.</p>
+          <h2>Step 3 — Submit Deposit</h2>
+          <p>After sending USDT on-chain, submit the transaction details here.</p>
         </div>
       </div>
 
       <div className="alert alert-info" style={{ marginBottom: '1.25rem' }}>
         <span>ℹ️</span>
         <span>
-          Send USDT to the wallet address from Step 2, then paste the blockchain
-          <strong> tx_hash</strong> and your <strong>username</strong> below.
+          Paste the blockchain <strong>tx_hash</strong> and fill in the user details.
+          All five fields are required by the API.
         </span>
       </div>
 
-      {/* ── Top-level API error banner ─────────────────────── */}
+      {/* Top-level API error banner */}
       {topMessage && (
         <div className="alert alert-danger" style={{ marginBottom: '1.25rem' }}>
           <span>❌</span>
@@ -144,6 +146,7 @@ export default function Step4Submit({ store }) {
       )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+
         {/* Reference */}
         <div>
           <label htmlFor="submitRef">Reference (Payment ID)</label>
@@ -152,12 +155,12 @@ export default function Step4Submit({ store }) {
             type="text"
             placeholder="DEP-XXXXXXXXXXXXXXX"
             value={submitReference}
-            onChange={e => { setSubmitReference(e.target.value); clearLocalError('reference') }}
+            onChange={e => { setSubmitReference(e.target.value); clearLocal('reference') }}
             style={fieldStyle('reference')}
           />
           {fieldError('reference')
             ? <FieldError msg={fieldError('reference')} />
-            : <p className="text-xs text-muted mt-1">Auto-filled from Step 3.</p>
+            : <p className="text-xs text-muted mt-1">Auto-filled from Step 2.</p>
           }
         </div>
 
@@ -166,46 +169,82 @@ export default function Step4Submit({ store }) {
           <label htmlFor="txHash">
             Transaction Hash (tx_hash)
             <span style={{ color: 'var(--muted)', fontWeight: 400, marginLeft: '.4rem', textTransform: 'none', letterSpacing: 0 }}>
-              — must be exactly 64 characters
+              — 64 hex characters
             </span>
           </label>
           <input
             id="txHash"
             type="text"
-            placeholder="64-character hex hash, e.g. 7eb9feea19ffeef3…"
+            placeholder="64-character hex hash…"
             value={submitTxHash}
-            onChange={e => { setSubmitTxHash(e.target.value); clearLocalError('tx_hash') }}
+            onChange={e => { setSubmitTxHash(e.target.value); clearLocal('tx_hash') }}
             className="font-mono"
             style={fieldStyle('tx_hash')}
             maxLength={64}
           />
-          {/* Live character counter */}
           <div className="flex justify-between mt-1">
             {fieldError('tx_hash')
               ? <FieldError msg={fieldError('tx_hash')} />
-              : <p className="text-xs text-muted">Blockchain transaction hash from your TRON wallet.</p>
+              : <p className="text-xs text-muted">On-chain TRON transaction hash.</p>
             }
             <span style={{
-              fontSize: '.72rem',
-              fontFamily: 'monospace',
+              fontSize: '.72rem', fontFamily: 'monospace', flexShrink: 0, marginLeft: '.5rem',
               color: submitTxHash.length === 64 ? 'var(--success)' : submitTxHash.length > 0 ? 'var(--warning)' : 'var(--muted)',
-              flexShrink: 0,
-              marginLeft: '.5rem',
             }}>
               {submitTxHash.length}/64
             </span>
           </div>
         </div>
 
+        {/* user_account_id + amount — side by side */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          {/* User ID */}
+          <div>
+            <label htmlFor="userId">User ID</label>
+            <input
+              id="userId"
+              type="number"
+              placeholder="e.g. 42"
+              value={submitUserId}
+              onChange={e => { setSubmitUserId(e.target.value); clearLocal('user_account_id') }}
+              style={fieldStyle('user_account_id')}
+              min="1"
+            />
+            {fieldError('user_account_id')
+              ? <FieldError msg={fieldError('user_account_id')} />
+              : <p className="text-xs text-muted mt-1">Numeric user ID.</p>
+            }
+          </div>
+
+          {/* Amount */}
+          <div>
+            <label htmlFor="amount">Amount (USDT)</label>
+            <input
+              id="amount"
+              type="number"
+              placeholder="e.g. 100"
+              value={submitAmount}
+              onChange={e => { setSubmitAmount(e.target.value); clearLocal('amount') }}
+              style={fieldStyle('amount')}
+              min="0"
+              step="0.01"
+            />
+            {fieldError('amount')
+              ? <FieldError msg={fieldError('amount')} />
+              : <p className="text-xs text-muted mt-1">Exact USDT amount sent.</p>
+            }
+          </div>
+        </div>
+
         {/* Username */}
         <div>
-          <label htmlFor="fromAddr">Username</label>
+          <label htmlFor="userName">Username (user_name)</label>
           <input
-            id="fromAddr"
+            id="userName"
             type="text"
-            placeholder="e.g. john_doe"
+            placeholder="e.g. John Doe"
             value={submitFromAddress}
-            onChange={e => { setSubmitFromAddress(e.target.value); clearLocalError('user_name') }}
+            onChange={e => { setSubmitFromAddress(e.target.value); clearLocal('user_name') }}
             style={fieldStyle('user_name')}
           />
           {fieldError('user_name')
@@ -217,14 +256,16 @@ export default function Step4Submit({ store }) {
         {/* Request preview */}
         <div>
           <label>Request Preview</label>
-          <div className="code-block" style={{ maxHeight: 160 }}>
+          <div className="code-block" style={{ maxHeight: 200 }}>
 {`POST ${baseURL}/api/deposit/submit
 X-SECRET-KEY: ${secretKey ? secretKey.slice(0, 10) + '••••' : '<not set>'}
 Content-Type: application/json
 
 {
   "reference": "${submitReference || '<reference>'}",
-  "tx_hash":   "${submitTxHash || '<tx_hash>'}",
+  "tx_hash":   "${submitTxHash   || '<tx_hash>'}",
+  "user_account_id": "${submitUserId   || '<user_account_id>'}",
+  "amount":    ${submitAmount   || '<amount>'},
   "user_name": "${submitFromAddress || '<user_name>'}"
 }`}
           </div>
@@ -244,7 +285,7 @@ Content-Type: application/json
       {submitResult?.ok && (
         <div className="alert alert-success" style={{ marginTop: '1rem' }}>
           <span>✅</span>
-          <span>Deposit submitted! Proceed to Step 5 to check its status.</span>
+          <span>Deposit submitted! Proceed to Step 4 to check its status.</span>
         </div>
       )}
 
@@ -263,21 +304,5 @@ Content-Type: application/json
         </button>
       </div>
     </div>
-  )
-}
-
-/** Inline field error message */
-function FieldError({ msg }) {
-  return (
-    <p style={{
-      marginTop: '.3rem',
-      fontSize: '.78rem',
-      color: 'var(--danger)',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '.3rem',
-    }}>
-      <span>⚠</span> {msg}
-    </p>
   )
 }

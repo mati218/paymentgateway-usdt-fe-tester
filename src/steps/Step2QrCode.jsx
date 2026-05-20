@@ -46,7 +46,7 @@ export default function Step2QrCode({ store }) {
           fontSize: '1.2rem', flexShrink: 0,
         }}>📷</div>
         <div>
-          <h2>Step 2 — Get QR Code</h2>
+          <h2>Step 1 — Get QR Code</h2>
           <p>Fetch the deposit wallet address and QR code image.</p>
         </div>
       </div>

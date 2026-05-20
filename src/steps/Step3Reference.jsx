@@ -7,9 +7,10 @@ import CopyRow from '../components/CopyRow'
 export default function Step3Reference({ store }) {
   const {
     baseURL, secretKey,
-    refNetwork, setRefNetwork,
-    refName, setRefName,
-    referenceResult, setReferenceResult,
+    refNetwork,       setRefNetwork,
+    refName,          setRefName,          // user_name
+    refUserAccountId, setRefUserAccountId, // user_account_id
+    referenceResult,  setReferenceResult,
     loadingReference, setLoadingReference,
     applyReferenceToSubmit,
     goToStep,
@@ -17,20 +18,25 @@ export default function Step3Reference({ store }) {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!refName.trim()) {
-      toast.error('Name is required')
+    if (!refUserAccountId.toString().trim() || isNaN(Number(refUserAccountId))) {
+      toast.error('User Account ID is required')
       return
     }
+    if (!refName.trim()) {
+      toast.error('Username (user_name) is required')
+      return
+    }
+
     setLoadingReference(true)
     const result = await getReference(baseURL, secretKey, {
-      network: refNetwork,
-      name: refName,
+      network:         refNetwork,
+      user_account_id: Number(refUserAccountId),
+      user_name:       refName,
     })
     setReferenceResult(result)
     setLoadingReference(false)
 
     if (result.ok) {
-      // Try to extract the reference/payment_id from common response shapes
       const ref = result.data?.reference
         || result.data?.data?.reference
         || result.data?.payment_id
@@ -64,12 +70,13 @@ export default function Step3Reference({ store }) {
           fontSize: '1.2rem', flexShrink: 0,
         }}>🔖</div>
         <div>
-          <h2>Step 3 — Create Reference</h2>
+          <h2>Step 2 — Create Reference</h2>
           <p>Generate a unique deposit reference / payment ID before sending USDT.</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+
         {/* Network */}
         <div>
           <label htmlFor="network">Network</label>
@@ -83,32 +90,46 @@ export default function Step3Reference({ store }) {
           </select>
         </div>
 
-        {/* Name */}
-        <div>
-          <label htmlFor="refName">Name</label>
-          <input
-            id="refName"
-            type="text"
-            placeholder="e.g. john"
-            value={refName}
-            onChange={e => setRefName(e.target.value)}
-          />
-          <p className="text-xs text-muted mt-1">
-            Identifies who is making this deposit.
-          </p>
+        {/* user_account_id + user_name — side by side */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div>
+            <label htmlFor="refUserId">User Account ID</label>
+            <input
+              id="refUserId"
+              type="number"
+              placeholder="e.g. 1"
+              value={refUserAccountId}
+              onChange={e => setRefUserAccountId(e.target.value)}
+              min="1"
+            />
+            <p className="text-xs text-muted mt-1">Numeric account ID.</p>
+          </div>
+
+          <div>
+            <label htmlFor="refName">Username (user_name)</label>
+            <input
+              id="refName"
+              type="text"
+              placeholder="e.g. Test Org"
+              value={refName}
+              onChange={e => setRefName(e.target.value)}
+            />
+            <p className="text-xs text-muted mt-1">Username for this deposit.</p>
+          </div>
         </div>
 
         {/* Request preview */}
         <div>
           <label>Request Preview</label>
-          <div className="code-block" style={{ maxHeight: 120 }}>
+          <div className="code-block" style={{ maxHeight: 140 }}>
 {`POST ${baseURL}/api/deposit/get-reference
 X-SECRET-KEY: ${secretKey ? secretKey.slice(0, 10) + '••••' : '<not set>'}
 Content-Type: application/json
 
 {
-  "network": "${refNetwork}",
-  "name": "${refName || '<name>'}"
+  "network":         "${refNetwork}",
+  "user_account_id": ${refUserAccountId || '<user_account_id>'},
+  "user_name":       "${refName || '<user_name>'}"
 }`}
           </div>
         </div>
@@ -131,7 +152,7 @@ Content-Type: application/json
           <div className="alert alert-success">
             <span>✅</span>
             <div style={{ flex: 1 }}>
-              <strong>Reference generated — auto-filled in Step 4</strong>
+              <strong>Reference generated — auto-filled in Step 3</strong>
               <div style={{ marginTop: '.4rem' }}>
                 <CopyRow value={reference} label="Reference" />
               </div>
