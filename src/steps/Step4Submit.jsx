@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import toast from 'react-hot-toast'
+import { AlertTriangle, Upload, Info, XCircle, CheckCircle, ArrowLeft, ArrowRight } from 'lucide-react'
 import { submitDeposit } from '../api/deposit'
 import ResponsePanel from '../components/ResponsePanel'
 
@@ -20,7 +21,7 @@ function FieldError({ msg }) {
       marginTop: '.3rem', fontSize: '.78rem', color: 'var(--danger)',
       display: 'flex', alignItems: 'center', gap: '.3rem',
     }}>
-      <span>⚠</span> {msg}
+      <AlertTriangle size={13} /> {msg}
     </p>
   )
 }
@@ -109,8 +110,10 @@ export default function Step4Submit({ store }) {
           width: 42, height: 42, borderRadius: 10,
           background: 'rgba(34,197,94,.15)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '1.2rem', flexShrink: 0,
-        }}>📤</div>
+          flexShrink: 0,
+        }}>
+          <Upload size={20} style={{ color: '#4ade80' }} />
+        </div>
         <div>
           <h2>Step 3 — Submit Deposit</h2>
           <p>After sending USDT on-chain, submit the transaction details here.</p>
@@ -118,7 +121,7 @@ export default function Step4Submit({ store }) {
       </div>
 
       <div className="alert alert-info" style={{ marginBottom: '1.25rem' }}>
-        <span>ℹ️</span>
+        <Info size={16} style={{ flexShrink: 0 }} />
         <span>
           Paste the blockchain <strong>tx_hash</strong> and fill in the user details.
           All five fields are required by the API.
@@ -128,7 +131,7 @@ export default function Step4Submit({ store }) {
       {/* Top-level API error banner */}
       {topMessage && (
         <div className="alert alert-danger" style={{ marginBottom: '1.25rem' }}>
-          <span>❌</span>
+          <XCircle size={16} style={{ flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
             <strong>{topMessage}</strong>
             {hasServerErrors && (
@@ -278,13 +281,13 @@ Content-Type: application/json
         >
           {loadingSubmit
             ? <><span className="spinner" /> Submitting…</>
-            : '📤 Submit Deposit'}
+            : <><Upload size={16} /> Submit Deposit</>}
         </button>
       </form>
 
       {submitResult?.ok && (
         <div className="alert alert-success" style={{ marginTop: '1rem' }}>
-          <span>✅</span>
+          <CheckCircle size={16} style={{ flexShrink: 0 }} />
           <span>Deposit submitted! Proceed to Step 4 to check its status.</span>
         </div>
       )}
@@ -293,14 +296,16 @@ Content-Type: application/json
 
       {/* Navigation */}
       <div className="flex gap-3" style={{ marginTop: '1.25rem' }}>
-        <button className="btn btn-outline" onClick={() => goToStep(3)}>← Back</button>
+        <button className="btn btn-outline" onClick={() => goToStep(3)}>
+          <ArrowLeft size={15} /> Back
+        </button>
         <button
           className="btn btn-primary"
           style={{ marginLeft: 'auto' }}
           onClick={() => goToStep(5)}
           disabled={!submitResult?.ok}
         >
-          Check Status →
+          Check Status <ArrowRight size={15} />
         </button>
       </div>
     </div>

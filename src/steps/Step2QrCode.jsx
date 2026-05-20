@@ -1,5 +1,6 @@
 import React from 'react'
 import toast from 'react-hot-toast'
+import { QrCode, Search, AlertTriangle, ArrowLeft, ArrowRight } from 'lucide-react'
 import { getQrCode } from '../api/deposit'
 import ResponsePanel from '../components/ResponsePanel'
 import CopyRow from '../components/CopyRow'
@@ -24,7 +25,6 @@ export default function Step2QrCode({ store }) {
     }
   }
 
-  // Extract wallet address and QR URL from various response shapes
   const walletAddress = qrResult?.data?.wallet_address
     || qrResult?.data?.data?.wallet_address
     || qrResult?.data?.address
@@ -43,8 +43,10 @@ export default function Step2QrCode({ store }) {
           width: 42, height: 42, borderRadius: 10,
           background: 'rgba(99,102,241,.15)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '1.2rem', flexShrink: 0,
-        }}>📷</div>
+          flexShrink: 0,
+        }}>
+          <QrCode size={20} style={{ color: '#818cf8' }} />
+        </div>
         <div>
           <h2>Step 1 — Get QR Code</h2>
           <p>Fetch the deposit wallet address and QR code image.</p>
@@ -65,7 +67,9 @@ X-SECRET-KEY: ${secretKey ? secretKey.slice(0, 10) + '••••' : '<not set>
         onClick={fetchQr}
         disabled={loadingQr}
       >
-        {loadingQr ? <><span className="spinner" /> Fetching…</> : '🔍 Fetch QR Code'}
+        {loadingQr
+          ? <><span className="spinner" /> Fetching…</>
+          : <><Search size={15} /> Fetch QR Code</>}
       </button>
 
       {/* QR display */}
@@ -85,7 +89,7 @@ X-SECRET-KEY: ${secretKey ? secretKey.slice(0, 10) + '••••' : '<not set>
               </div>
             )}
             <div className="alert alert-warning" style={{ width: '100%' }}>
-              <span>⚠️</span>
+              <AlertTriangle size={16} style={{ flexShrink: 0 }} />
               <span>Send <strong>USDT TRC20 only</strong> to this address. Other tokens will be lost.</span>
             </div>
           </div>
@@ -96,14 +100,16 @@ X-SECRET-KEY: ${secretKey ? secretKey.slice(0, 10) + '••••' : '<not set>
 
       {/* Navigation */}
       <div className="flex gap-3" style={{ marginTop: '1.25rem' }}>
-        <button className="btn btn-outline" onClick={() => goToStep(1)}>← Back</button>
+        <button className="btn btn-outline" onClick={() => goToStep(1)}>
+          <ArrowLeft size={15} /> Back
+        </button>
         <button
           className="btn btn-primary"
           style={{ marginLeft: 'auto' }}
           onClick={() => goToStep(3)}
           disabled={!qrResult?.ok}
         >
-          Continue to Reference →
+          Continue to Reference <ArrowRight size={15} />
         </button>
       </div>
     </div>

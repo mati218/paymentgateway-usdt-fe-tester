@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import toast from 'react-hot-toast'
+import { Copy, Check } from 'lucide-react'
 
 export default function CopyRow({ value, label }) {
   const [copied, setCopied] = useState(false)
@@ -16,7 +17,9 @@ export default function CopyRow({ value, label }) {
     <div className="copy-row">
       <span title={value}>{value}</span>
       <button className="btn btn-outline btn-sm" onClick={copy} style={{ flexShrink: 0 }}>
-        {copied ? '✓' : 'Copy'}
+        {copied
+          ? <><Check size={13} /> Copied</>
+          : <><Copy size={13} /> Copy</>}
       </button>
     </div>
   )

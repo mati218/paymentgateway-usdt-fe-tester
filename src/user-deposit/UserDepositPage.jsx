@@ -1,5 +1,6 @@
 import React from 'react'
 import toast from 'react-hot-toast'
+import { Check, KeyRound } from 'lucide-react'
 import { useDepositFlow } from './useDepositFlow'
 import { generateDepositQR, generateReference, submitUserDeposit } from '../api/userDeposit'
 import Step1Amount  from './Step1Amount'
@@ -48,7 +49,7 @@ function DepositSteps({ current }) {
           <React.Fragment key={num}>
             <div className="flex items-center gap-2 flex-shrink-0">
               <div className={`step-circle ${done ? 'done' : active ? 'active' : ''}`}>
-                {done ? '✓' : num}
+                {done ? <Check size={14} /> : num}
               </div>
               <span className={`step-label ${done ? 'done' : active ? 'active' : ''}`}>
                 {label}
@@ -68,7 +69,9 @@ function DepositSteps({ current }) {
 function NoKeyPrompt() {
   return (
     <div className="bg-bg-2 border border-border rounded-xl p-6 shadow-[0_4px_24px_rgba(0,0,0,0.5)] max-w-md mx-auto text-center">
-      <div className="text-4xl mb-3 leading-none">🔑</div>
+      <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-4">
+        <KeyRound size={32} className="text-accent" />
+      </div>
       <h2 className="mb-2">API Key Required</h2>
       <p className="mb-4">
         Enter your <strong className="text-content">X-SECRET-KEY</strong> in the

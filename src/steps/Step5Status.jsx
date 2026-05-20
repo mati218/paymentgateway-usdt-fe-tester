@@ -1,5 +1,6 @@
 import React from 'react'
 import toast from 'react-hot-toast'
+import { Search, RefreshCw, ArrowLeft, Plus } from 'lucide-react'
 import { checkDepositStatus } from '../api/deposit'
 import ResponsePanel from '../components/ResponsePanel'
 
@@ -46,7 +47,7 @@ export default function Step5Status({ store }) {
     store.setSubmitFromAddress('')
     store.setStatusRef('')
     goToStep(2)
-    toast('Flow reset — ready for a new deposit', { icon: '🔄' })
+    toast('Flow reset — ready for a new deposit')
   }
 
   const depositStatus = statusResult?.data?.status
@@ -63,8 +64,10 @@ export default function Step5Status({ store }) {
           width: 42, height: 42, borderRadius: 10,
           background: 'rgba(245,158,11,.15)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '1.2rem', flexShrink: 0,
-        }}>🔍</div>
+          flexShrink: 0,
+        }}>
+          <Search size={20} style={{ color: '#fbbf24' }} />
+        </div>
         <div>
           <h2>Step 5 — Check Deposit Status</h2>
           <p>Poll the status of your submitted deposit by reference.</p>
@@ -102,7 +105,7 @@ X-SECRET-KEY: ${secretKey ? secretKey.slice(0, 10) + '••••' : '<not set>
         >
           {loadingStatus
             ? <><span className="spinner" /> Checking…</>
-            : '🔍 Check Status'}
+            : <><Search size={15} /> Check Status</>}
         </button>
       </form>
 
@@ -150,20 +153,22 @@ X-SECRET-KEY: ${secretKey ? secretKey.slice(0, 10) + '••••' : '<not set>
 
       {/* Navigation */}
       <div className="flex gap-3" style={{ marginTop: '1.25rem' }}>
-        <button className="btn btn-outline" onClick={() => goToStep(4)}>← Back</button>
+        <button className="btn btn-outline" onClick={() => goToStep(4)}>
+          <ArrowLeft size={15} /> Back
+        </button>
         <button
           className="btn btn-outline"
           onClick={handleCheck}
           disabled={loadingStatus || !statusRef.trim()}
         >
-          🔄 Refresh
+          <RefreshCw size={15} /> Refresh
         </button>
         <button
           className="btn btn-success"
           style={{ marginLeft: 'auto' }}
           onClick={resetFlow}
         >
-          + New Deposit
+          <Plus size={15} /> New Deposit
         </button>
       </div>
     </div>

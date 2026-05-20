@@ -1,4 +1,5 @@
 import React from 'react'
+import { Check } from 'lucide-react'
 
 const STEPS = [
   { n: 1, label: 'QR Code' },
@@ -17,7 +18,7 @@ export default function StepIndicator({ current }) {
           <React.Fragment key={s.n}>
             <div className="step-item">
               <div className={`step-circle ${isDone ? 'done' : isActive ? 'active' : ''}`}>
-                {isDone ? '✓' : s.n}
+                {isDone ? <Check size={14} /> : s.n}
               </div>
               <span className={`step-label ${isDone ? 'done' : isActive ? 'active' : ''}`}>
                 {s.label}

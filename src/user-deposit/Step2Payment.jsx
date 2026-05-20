@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
+import {
+  Check, Copy, Clock, Zap, Timer,
+  QrCode, Wallet, Tag, ClipboardList,
+  AlertTriangle, ArrowRight,
+} from 'lucide-react'
 
 function getQrSrc(raw) {
   if (!raw) return null
@@ -26,11 +31,10 @@ function CopyButton({ value, label }) {
     }
   }
   return (
-    <button
-      onClick={handle}
-      className="btn btn-sm btn-outline flex-shrink-0 min-w-[76px]"
-    >
-      {copied ? '✓ Copied' : '⧉ Copy'}
+    <button onClick={handle} className="btn btn-sm btn-outline flex-shrink-0 min-w-[76px]">
+      {copied
+        ? <><Check size={13} /> Copied</>
+        : <><Copy size={13} /> Copy</>}
     </button>
   )
 }
@@ -38,7 +42,7 @@ function CopyButton({ value, label }) {
 function InfoRow({ icon, label, value, mono, copyable }) {
   return (
     <div className="flex items-center gap-3 bg-bg-3 border border-border rounded-lg px-3.5 py-2.5">
-      {icon && <span className="text-base flex-shrink-0">{icon}</span>}
+      {icon && <span className="text-content-3 flex-shrink-0">{icon}</span>}
       <div className="flex-1 min-w-0">
         <div className="text-[10px] text-content-3 font-semibold uppercase tracking-widest mb-0.5">
           {label}
@@ -65,9 +69,11 @@ export default function Step2Payment({ walletAddress, qrImage, referenceId, amou
     return () => clearInterval(id)
   }, [paymentExpiry])
 
-  const expired   = remaining <= 0
-  const urgent    = remaining > 0 && remaining < 5 * 60 * 1000
-  const qrSrc     = getQrSrc(qrImage)
+  const expired = remaining <= 0
+  const urgent  = remaining > 0 && remaining < 5 * 60 * 1000
+  const qrSrc   = getQrSrc(qrImage)
+
+  const TimerIcon = expired ? Clock : urgent ? Zap : Timer
 
   return (
     <div className="max-w-lg mx-auto flex flex-col gap-4">
@@ -79,8 +85,9 @@ export default function Step2Payment({ walletAddress, qrImage, referenceId, amou
           : urgent ? 'bg-yellow-400/8 border-yellow-400/20'
           : 'bg-accent/8 border-accent/20'
         }`}>
-          <span className={`font-semibold ${expired ? 'text-red-400' : urgent ? 'text-yellow-400' : 'text-accent'}`}>
-            {expired ? '⏰ Payment window expired' : urgent ? '⚡ Complete payment within' : '⏱ Complete payment within'}
+          <span className={`font-semibold flex items-center gap-2 ${expired ? 'text-red-400' : urgent ? 'text-yellow-400' : 'text-accent'}`}>
+            <TimerIcon size={15} />
+            {expired ? 'Payment window expired' : 'Complete payment within'}
           </span>
           {!expired && (
             <span className={`font-mono font-bold text-lg ${urgent ? 'text-yellow-400' : 'text-accent'}`}>
@@ -120,7 +127,7 @@ export default function Step2Payment({ walletAddress, qrImage, referenceId, amou
             </div>
           ) : (
             <div className="w-48 h-48 rounded-xl bg-bg-2 border-2 border-dashed border-border flex flex-col items-center justify-center text-content-3 gap-2">
-              <span className="text-3xl">📷</span>
+              <QrCode size={36} />
               <span className="text-xs">QR not available</span>
             </div>
           )}
@@ -129,15 +136,15 @@ export default function Step2Payment({ walletAddress, qrImage, referenceId, amou
 
         {/* Wallet + reference */}
         <div className="flex flex-col gap-2">
-          <InfoRow icon="📬" label="Wallet Address (TRC20)" value={walletAddress} mono copyable />
-          <InfoRow icon="🔖" label="Reference ID"           value={referenceId}   mono copyable />
+          <InfoRow icon={<Wallet size={16} />} label="Wallet Address (TRC20)" value={walletAddress} mono copyable />
+          <InfoRow icon={<Tag size={16} />}    label="Reference ID"           value={referenceId}   mono copyable />
         </div>
       </div>
 
       {/* Instructions */}
       <div className="bg-bg-2 border border-border rounded-xl p-5 shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
         <div className="font-bold text-sm text-content mb-4 flex items-center gap-2">
-          <span>📋</span> How to Complete Your Deposit
+          <ClipboardList size={16} className="text-content-3" /> How to Complete Your Deposit
         </div>
         <div className="flex flex-col gap-3">
           {[
@@ -158,13 +165,13 @@ export default function Step2Payment({ walletAddress, qrImage, referenceId, amou
 
       {/* Warning */}
       <div className="alert alert-warning">
-        <span className="text-lg flex-shrink-0 mt-0.5">⚠</span>
+        <AlertTriangle size={17} className="flex-shrink-0 mt-0.5" />
         <div>
-          <div className="font-bold mb-1 text-yellow-300">Network Warning</div>
-          <p className="text-xs leading-relaxed text-yellow-200/90">
+          <div className="font-bold mb-1">Network Warning</div>
+          <p className="text-xs leading-relaxed opacity-90">
             Always use the <strong>TRC20 (TRON)</strong> network when sending.
             Sending via ERC20, BEP20, or any other network may result in{' '}
-            <strong className="text-yellow-300">permanent and unrecoverable loss of funds</strong>.
+            <strong>permanent and unrecoverable loss of funds</strong>.
           </p>
         </div>
       </div>
@@ -175,7 +182,7 @@ export default function Step2Payment({ walletAddress, qrImage, referenceId, amou
         onClick={onContinue}
         disabled={expired}
       >
-        I've Sent the Payment →
+        I've Sent the Payment <ArrowRight size={16} />
       </button>
     </div>
   )

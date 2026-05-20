@@ -1,5 +1,6 @@
 import React from 'react'
 import toast from 'react-hot-toast'
+import { Tag, CheckCircle, ArrowLeft, ArrowRight } from 'lucide-react'
 import { getReference } from '../api/deposit'
 import ResponsePanel from '../components/ResponsePanel'
 import CopyRow from '../components/CopyRow'
@@ -8,8 +9,8 @@ export default function Step3Reference({ store }) {
   const {
     baseURL, secretKey,
     refNetwork,       setRefNetwork,
-    refName,          setRefName,          // user_name
-    refUserAccountId, setRefUserAccountId, // user_account_id
+    refName,          setRefName,
+    refUserAccountId, setRefUserAccountId,
     referenceResult,  setReferenceResult,
     loadingReference, setLoadingReference,
     applyReferenceToSubmit,
@@ -67,8 +68,10 @@ export default function Step3Reference({ store }) {
           width: 42, height: 42, borderRadius: 10,
           background: 'rgba(99,102,241,.15)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '1.2rem', flexShrink: 0,
-        }}>🔖</div>
+          flexShrink: 0,
+        }}>
+          <Tag size={20} style={{ color: '#818cf8' }} />
+        </div>
         <div>
           <h2>Step 2 — Create Reference</h2>
           <p>Generate a unique deposit reference / payment ID before sending USDT.</p>
@@ -141,7 +144,7 @@ Content-Type: application/json
         >
           {loadingReference
             ? <><span className="spinner" /> Generating…</>
-            : '🔖 Generate Reference'}
+            : <><Tag size={15} /> Generate Reference</>}
         </button>
       </form>
 
@@ -150,7 +153,7 @@ Content-Type: application/json
         <>
           <div className="divider" />
           <div className="alert alert-success">
-            <span>✅</span>
+            <CheckCircle size={16} style={{ flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
               <strong>Reference generated — auto-filled in Step 3</strong>
               <div style={{ marginTop: '.4rem' }}>
@@ -165,14 +168,16 @@ Content-Type: application/json
 
       {/* Navigation */}
       <div className="flex gap-3" style={{ marginTop: '1.25rem' }}>
-        <button className="btn btn-outline" onClick={() => goToStep(2)}>← Back</button>
+        <button className="btn btn-outline" onClick={() => goToStep(2)}>
+          <ArrowLeft size={15} /> Back
+        </button>
         <button
           className="btn btn-primary"
           style={{ marginLeft: 'auto' }}
           onClick={() => goToStep(4)}
           disabled={!referenceResult?.ok}
         >
-          Continue to Submit →
+          Continue to Submit <ArrowRight size={15} />
         </button>
       </div>
     </div>

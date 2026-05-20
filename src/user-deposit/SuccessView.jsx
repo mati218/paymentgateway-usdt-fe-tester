@@ -1,3 +1,5 @@
+import { CheckCircle, Lightbulb } from 'lucide-react'
+
 export default function SuccessView({ amount, referenceId, txHash, onReset }) {
   const rows = [
     { label: 'Amount',       value: `${parseFloat(amount).toFixed(2)} USDT`, mono: false },
@@ -10,8 +12,8 @@ export default function SuccessView({ amount, referenceId, txHash, onReset }) {
     <div className="bg-bg-2 border border-border rounded-xl p-6 shadow-[0_4px_24px_rgba(0,0,0,0.5)] max-w-md mx-auto text-center">
 
       {/* Icon */}
-      <div className="w-20 h-20 rounded-full bg-accent/10 border-2 border-accent/30 flex items-center justify-center text-4xl mx-auto mb-5">
-        ✅
+      <div className="w-20 h-20 rounded-full bg-accent/10 border-2 border-accent/30 flex items-center justify-center mx-auto mb-5">
+        <CheckCircle size={40} className="text-accent" />
       </div>
 
       <h2 className="text-accent mb-2">Deposit Submitted!</h2>
@@ -44,7 +46,7 @@ export default function SuccessView({ amount, referenceId, txHash, onReset }) {
       </div>
 
       <div className="alert alert-success mb-5 text-left">
-        <span className="flex-shrink-0">💡</span>
+        <Lightbulb size={16} className="flex-shrink-0 mt-0.5" />
         <p className="text-xs leading-relaxed">
           Verification typically takes <strong>2–5 minutes</strong>.
           You'll receive a notification once your balance is updated.

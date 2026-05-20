@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import toast from 'react-hot-toast'
+import { Copy, Check } from 'lucide-react'
 
 export default function ResponsePanel({ result, title = 'Response' }) {
   const [copied, setCopied] = useState(false)
@@ -25,7 +26,9 @@ export default function ResponsePanel({ result, title = 'Response' }) {
           {title} — HTTP {result.status}
         </span>
         <button className="btn btn-outline btn-sm" onClick={copyJson}>
-          {copied ? '✓ Copied' : 'Copy JSON'}
+          {copied
+            ? <><Check size={12} /> Copied</>
+            : <><Copy size={12} /> Copy JSON</>}
         </button>
       </div>
       <pre className="code-block">{json}</pre>

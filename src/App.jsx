@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Eye, EyeOff, Sun, Moon } from 'lucide-react'
 import UserDepositPage from './user-deposit/UserDepositPage'
 import { useFlowStore } from './store/flowStore'
 import StepIndicator from './components/StepIndicator'
@@ -11,8 +12,14 @@ export default function App() {
   const [mode, setMode]           = useState('user')
   const [secretKey, setSecretKey] = useState('')
   const [showKey, setShowKey]     = useState(false)
+  const [theme, setTheme]         = useState(() => localStorage.getItem('theme') || 'dark')
 
   const store = useFlowStore()
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark')
+    localStorage.setItem('theme', theme)
+  }, [theme])
 
   useEffect(() => {
     store.setSecretKey(secretKey)
@@ -40,7 +47,7 @@ export default function App() {
         </div>
 
         {/* X-SECRET-KEY input */}
-        <div className="flex items-center gap-2 flex-1 min-w-[200px] max-w-sm">
+        <div className="flex items-center gap-2 flex-1 min-w-[200px] max-w-sm ml-auto">
           <span className="text-[10px] font-bold text-content-3 uppercase tracking-widest whitespace-nowrap flex-shrink-0">
             X-SECRET-KEY
           </span>
@@ -58,7 +65,7 @@ export default function App() {
               tabIndex={-1}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-content-3 hover:text-content transition-colors text-base leading-none bg-transparent border-0 cursor-pointer p-0"
             >
-              {showKey ? '🙈' : '👁'}
+              {showKey ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
           {/* Connected dot */}
@@ -70,8 +77,18 @@ export default function App() {
           />
         </div>
 
+        {/* Theme toggle */}
+        <button
+          type="button"
+          onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          className="flex-shrink-0 w-8 h-8 rounded-lg border border-border bg-bg-3 hover:border-accent transition-colors duration-200 flex items-center justify-center cursor-pointer text-content-3 hover:text-accent"
+        >
+          {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
+
         {/* Mode toggle */}
-        <div className="flex bg-bg-3 border border-border rounded-lg p-1 gap-1 flex-shrink-0 ml-auto">
+        <div className="flex bg-bg-3 border border-border rounded-lg p-1 gap-1 flex-shrink-0">
           {[
             { key: 'user', label: 'User View' },
             { key: 'dev',  label: 'Dev Tester' },

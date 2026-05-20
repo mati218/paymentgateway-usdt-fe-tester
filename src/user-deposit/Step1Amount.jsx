@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { CreditCard, AlertTriangle, Globe, ArrowRight } from 'lucide-react'
 
 const PRESETS = [50, 100, 200, 500]
 const MIN_AMOUNT = 10
@@ -26,7 +27,9 @@ export default function Step1Amount({ user, loading, onNext }) {
 
       {/* Title */}
       <div className="text-center mb-7">
-        <div className="text-4xl mb-2 leading-none">💳</div>
+        <div className="w-14 h-14 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-3">
+          <CreditCard size={28} className="text-accent" />
+        </div>
         <h2 className="mb-1">Deposit USDT</h2>
         <p>Add funds to your account instantly via TRC20</p>
       </div>
@@ -67,7 +70,7 @@ export default function Step1Amount({ user, loading, onNext }) {
         </div>
         {error && (
           <p className="text-red-400 text-xs mt-1.5 flex items-center gap-1">
-            <span>⚠</span> {error}
+            <AlertTriangle size={13} /> {error}
           </p>
         )}
       </div>
@@ -91,9 +94,9 @@ export default function Step1Amount({ user, loading, onNext }) {
 
       {/* Network info */}
       <div className="alert alert-info mb-6">
-        <span className="flex-shrink-0">🌐</span>
+        <Globe size={16} className="flex-shrink-0 mt-0.5" />
         <div>
-          <div className="font-semibold mb-0.5 text-blue-200">Network: TRC20 (TRON)</div>
+          <div className="font-semibold mb-0.5">Network: TRC20 (TRON)</div>
           <div className="text-xs opacity-85">
             Min. deposit: {MIN_AMOUNT} USDT &nbsp;·&nbsp; Processing: ~2–5 min
           </div>
@@ -108,7 +111,7 @@ export default function Step1Amount({ user, loading, onNext }) {
       >
         {loading
           ? <><span className="spinner" /> Generating Payment Details…</>
-          : 'Generate Payment →'
+          : <>Generate Payment <ArrowRight size={16} /></>
         }
       </button>
     </div>
