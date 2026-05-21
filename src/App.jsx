@@ -7,6 +7,7 @@ import Step2QrCode    from './steps/Step2QrCode'
 import Step3Reference from './steps/Step3Reference'
 import Step4Submit    from './steps/Step4Submit'
 import Step5Status    from './steps/Step5Status'
+import ReverbTest     from './pages/ReverbTest'
 
 export default function App() {
   const [mode, setMode]           = useState('user')
@@ -92,6 +93,7 @@ export default function App() {
           {[
             { key: 'user', label: 'User View' },
             { key: 'dev',  label: 'Dev Tester' },
+            { key: 'ws',   label: 'WS Test' },
           ].map(({ key, label }) => (
             <button
               key={key}
@@ -111,6 +113,8 @@ export default function App() {
       {/* ── Main ── */}
       <main className="flex-1 flex flex-col">
         {mode === 'user' && <UserDepositPage secretKey={secretKey} />}
+
+        {mode === 'ws' && <ReverbTest secretKey={secretKey} />}
 
         {mode === 'dev' && (
           <div className="p-4 md:p-8 max-w-3xl mx-auto w-full">

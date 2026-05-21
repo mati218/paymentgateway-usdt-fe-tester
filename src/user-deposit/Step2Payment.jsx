@@ -57,7 +57,7 @@ function InfoRow({ icon, label, value, mono, copyable }) {
   )
 }
 
-export default function Step2Payment({ walletAddress, qrImage, referenceId, amount, paymentExpiry, onContinue,onBack }) {
+export default function Step2Payment({ walletAddress, qrImage, referenceId, amount, paymentExpiry, onContinue, onBack }) {
   const [remaining, setRemaining] = useState(paymentExpiry ? paymentExpiry - Date.now() : 0)
 
   useEffect(() => {
@@ -82,8 +82,8 @@ export default function Step2Payment({ walletAddress, qrImage, referenceId, amou
       {/* Timer */}
       {paymentExpiry && (
         <div className={`flex items-center justify-between rounded-xl px-4 py-2.5 border text-sm ${expired ? 'bg-red-500/8 border-red-500/20'
-            : urgent ? 'bg-yellow-400/8 border-yellow-400/20'
-              : 'bg-accent/8 border-accent/20'
+          : urgent ? 'bg-yellow-400/8 border-yellow-400/20'
+            : 'bg-accent/8 border-accent/20'
           }`}>
           <span className={`font-semibold flex items-center gap-2 ${expired ? 'text-red-400' : urgent ? 'text-yellow-400' : 'text-accent'}`}>
             <TimerIcon size={15} />
@@ -177,20 +177,22 @@ export default function Step2Payment({ walletAddress, qrImage, referenceId, amou
       </div>
 
       {/* CTA */}
-      <button
-        className="btn btn-outline flex-shrink-0"
-        onClick={onBack}
+      <div className='flex items-center gap-2'>
+        <button
+          className="btn btn-outline flex-shrink-0 py-3"
+          onClick={onBack}
         // disabled={loading}
-      >
-        <ArrowLeft size={15} /> Back
-      </button>
-      <button
-        className="btn btn-success w-full h-12 text-base"
-        onClick={onContinue}
-        disabled={expired}
-      >
-        I've Sent the Payment <ArrowRight size={16} />
-      </button>
+        >
+          <ArrowLeft size={15} /> Back
+        </button>
+        <button
+          className="btn btn-success w-full h-12 text-base"
+          onClick={onContinue}
+          disabled={expired}
+        >
+          I've Sent the Payment <ArrowRight size={16} />
+        </button>
+      </div>
     </div>
   )
 }
