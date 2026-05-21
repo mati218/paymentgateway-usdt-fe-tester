@@ -2,7 +2,7 @@ import axios from 'axios'
 
 // Single source of truth for the API base URL.
 // Change this one line if the backend moves.
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000'
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://api.aipay247.com'
 
 /**
  * Build an axios instance using the secret key stored in the flow context.

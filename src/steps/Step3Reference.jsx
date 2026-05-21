@@ -89,7 +89,7 @@ export default function Step3Reference({ store }) {
             onChange={e => setRefNetwork(e.target.value)}
           >
             <option value="TRC20">TRC20 (TRON)</option>
-            <option value="ERC20">ERC20 (Ethereum)</option>
+            {/* <option value="ERC20">ERC20 (Ethereum)</option> */}
           </select>
         </div>
 
